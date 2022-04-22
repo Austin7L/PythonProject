@@ -1,6 +1,7 @@
 from typing import Container, Text
 import wx
 from wx.core import EVT_BUTTON, Colour, TextCtrl
+import GridFrame
 
 
 class GetUserInfo(wx.Frame):

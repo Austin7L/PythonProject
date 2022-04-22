@@ -1,6 +1,9 @@
+import sqlite3
 import wx
 import wx.grid as  gridlib
-from wx.core import EVT_BUTTON, Colour, TextCtrl
+from wx.core import EVT_BUTTON, Center, Centre, Colour, TextCtrl
+import cx_Oracle 
+import jaydebeapi
 
 class MyForm(wx.Frame):
     name = ""
@@ -15,7 +18,7 @@ class MyForm(wx.Frame):
         self.txtfield = wx.TextCtrl(self.panel, pos = (5, 60))
         self.btn.Bind(wx.EVT_BUTTON, self.Onclick)
         self.grid = gridlib.Grid(self.panel)
-        self.grid.SetReadOnly()
+        # self.grid.SetReadOnly(1,0, True)
         self.grid.CreateGrid(25,8)
         self.grid.Bind(gridlib.EVT_GRID_CELL_RIGHT_CLICK,
                        self.showPopupMenu)
@@ -32,6 +35,7 @@ class MyForm(wx.Frame):
         sizer_all.Add(h_sizer, proportion=0,flag=wx.EXPAND|wx.ALL,border=5)
         sizer_all.Add(v_sizer, proportion=0,flag=wx.EXPAND|wx.ALL,border=5)
         self.panel.SetSizer(sizer_all)
+        self.Centre() #畫面置中
         
     #----------------------------------------------------------------------
     def showPopupMenu(self, event):
@@ -61,11 +65,91 @@ class MyForm(wx.Frame):
         # self.btn.SetLabel("Clicked") 
         # self.txtfield.SetLabel("HI")
         name = self.txtfield.GetValue()
-        self.grid.SetCellValue(0, 0, name)
+        
 
+        #connect db
+        self.db = db
+        self.cursor = self.db.conn.cursor()
+        self.result = self.cursor.execute("select * from dspb02 where pb_userid = 'AUSTIN' ")
+        self.val = self.cursor.fetchall()
+
+        # for row in self.val:
+        #     row_num = row[0]
+        #     cells = row[1:]
+        #     for i in range(0,len(cells)):
+        #         if cells[i] != None and cells[i] != "null":
+        #             self.grid.SetCellValue(row_num-1, i, str(cells[i]))
+
+        # metadata = self.cursor.execute("select pb_userid from dspb02 where pb_userid = 'AUSTIN'")
+        # labels = []
+        # #Column Name
+        # for i in metadata.description:
+        #     labels.append(i[0])
+        # labels = labels[1:]
+        # for i in range(len(labels)):
+        #     self.grid.SetColLabelValue(i, labels[i])
+        
+        # #Data
+        # logins = self.cursor.execute("select pb_userid from dspb02 where pb_userid = 'AUSTIN' ")
+        # print("HI",logins)
+        # for row in logins:
+        #     row_num = row[0]
+        #     cells = row[1:]
+        #     for i in range(0,len(cells)):
+        #         if cells[i] != None and cells[i] != "null":
+        #             self.grid.SetCellValue(row_num-1, i, str(cells[i]))
+
+
+        # print(self.val)
+        # self.db_exists = self.val[0]
+        # for row in self.val:
+        #     row_num = row[0]
+        #     cells = row[1:]
+        #     for i in range(0,len(cells)):
+        #         if cells[i] != None and cells[i] != "null":
+        #             self.grid.SetCellValue(row_num-1, i, str(cells[i]))
+        test = self.cursor.execute("select * from dspb02 where pb_userid = 'AUSTIN' ")
+        for i in self.cursor.execute("select * from dspb02 where pb_userid = 'AUSTIN'"):
+            self.grid.SetCellValue(0, i, str(self.val[0][i]))
+            for j in self.result[i]:
+                self.grid.SetCellValue(i, j, str(self.val[i][j]))
+        # self.grid.SetCellValue(0, 0, str(self.val[0][0]))
+        # self.grid.SetCellValue(0, 1, str(self.val[0][1]))
+        # self.grid.SetCellValue(0, 2, str(self.val[0][2]))
+        # self.grid.SetCellValue(0, 3, str(self.val[0][3]))
+        self.cursor.close()
+        self.db.conn.close()
+
+
+class GetDatabase():
+    def __init__(self):
+        userpwd = "dsod"
+        # self.conn = cx_Oracle.connect('DSOD/dsod@10.1.1.91/vmdb01')
+
+        # dsn = cx_Oracle.makedsn('10.1.1.91','1521',service_name='vmdb01')
+        # conn = cx_Oracle.connect('DSOD', 'dsod', dsn)
+
+        
+
+        url = 'jdbc:oracle:thin:@10.1.1.91:1521:vmdb01'
+        user = 'DSOD'
+        password = 'dsod'
+        dirver = 'oracle.jdbc.OracleDriver'
+        jarFile = 'D:\\Austin\\00.Personal\\Python_workspace\\ojdbc6.jar'
+        sqlStr = 'select * from T_ERP_MAT_IMGEXG'
+
+        self.conn = jaydebeapi.connect(dirver, url, [user, password], jarFile)
+        
+        # curs = conn.cursor()
+        # curs.execute(sqlStr)
+        # result = curs.fetchall()
+        # print(result)
+        # curs.close()
+        # conn.close()
 
 # Run the program
 if __name__ == "__main__":
+    db=GetDatabase()
     app = wx.PySimpleApp()
     frame = MyForm().Show()
     app.MainLoop()
